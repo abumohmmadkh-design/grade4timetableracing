@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Grade 4 Timetable Racing – 3D Ultimate</title>
+<style>
+body{margin:0;font-family:Segoe UI, Tahoma, sans-serif;background:linear-gradient(180deg,#ffe082,#ffcc80);text-align:center;overflow-x:hidden;transition:background 1s}
+body.night{background:linear-gradient(180deg,#0d1b2a,#000814);color:#fff}
+h1{background:#1b5e20;color:#fff;margin:0;padding:12px}
+.topbar{display:flex;justify-content:space-around;flex-wrap:wrap;padding:10px;gap:10px}
+.pill{background:#fff;padding:8px 14px;border-radius:999px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+body.night .pill{background:#1b263b;color:#fff}
+#timer{color:#b00020;font-size:20px}
+
+.track{position:relative;height:340px;background:linear-gradient(#2f2f2f,#1f1f1f);border-top:10px solid #fff;border-bottom:10px solid #fff;overflow:hidden;perspective:900px}
+/* curved road illusion */
+.track:before{content:"";position:absolute;left:-10%;right:-10%;top:-40%;bottom:-40%;background:radial-gradient(ellipse at center,transparent 60%,rgba(0,0,0,.5) 100%);pointer-events:none}
+.lane{position:absolute;width:100%;height:50%}
+#lane1{top:0;border-bottom:6px dashed #fff}
+#lane2{bottom:0}
+.stripes{position:absolute;left:0;right:0;top:50%;height:6px;background:repeating-linear-gradient(90deg,#fff 0 40px,transparent 40px 80px);animation:move 1s linear infinite}
+@keyframes move{from{background-position:0}to{background-position:-80px}}
+.finish{position:absolute;left:100px;top:0;height:100%;width:18px;background:repeating-linear-gradient(0deg,#fff 0 10px,#000 10px 20px)}
+
+/* 3D CAR */
+.car{position:absolute;width:110px;height:55px;transform-style:preserve-3d;transition:left .4s ease,transform .4s}
+.car-body{position:absolute;width:110px;height:45px;background:linear-gradient(135deg,#e53935,#b71c1c);border-radius:12px;box-shadow:0 10px 18px rgba(0,0,0,0.6);transform:rotateX(20deg)}
+.car-top{position:absolute;width:70px;height:32px;background:linear-gradient(135deg,#ff7043,#d84315);border-radius:8px;top:-20px;left:20px;transform:rotateX(20deg);box-shadow:0 6px 12px rgba(0,0,0,.5)}
+.wheel{position:absolute;width:24px;height:24px;background:#111;border-radius:50%;bottom:-12px;box-shadow:inset 0 0 6px #666}
+.w1{left:12px}.w2{right:12px}
+.spin{animation:spin .3s linear infinite}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.flame{position:absolute;width:18px;height:10px;background:radial-gradient(circle at 30% 50%,#fff, #ffeb3b 40%, #ff5722 70%, transparent 72%);right:-12px;top:20px;opacity:0;transition:opacity .2s}
+.boost .flame{opacity:1}
+#car1{top:70px}
+#car2{bottom:70px;filter:hue-rotate(200deg)}
+.skid{transform:rotateY(15deg)}
+
+#questionBox{background:#fff;width:min(900px,95%);margin:15px auto;padding:18px;border-radius:15px;box-shadow:0 0 12px rgba(0,0,0,.3)}
+body.night #questionBox{background:#1b263b}
+.answers{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+.answerBtn{padding:12px;font-size:18px;border:none;border-radius:10px;background:#1b5e20;color:#fff;cursor:pointer}
+.answerBtn:hover{background:#2e7d32}
+.controls{margin:10px}
+select,input,button.toggle{padding:8px;border-radius:8px;border:1px solid #ccc;margin:5px}
+#leaderboard{background:#fff;width:320px;margin:10px auto;padding:10px;border-radius:12px;box-shadow:0 0 10px rgba(0,0,0,.2)}
+body.night #leaderboard{background:#1b263b}
+.streak{color:#e65100;font-weight:bold}
+</style>
+</head>
+<body>
+<h1>🏁 Grade 4 Timetable Racing – 3D Ultimate T. Khalil Al Ahmad🏁</h1>
+<div class="topbar">
+<div class="pill">Turn: <span id="turn">-</span></div>
+<div class="pill">Timer: <span id="timer">30</span>s</div>
+<div class="pill"><span id="score1">Team A: 0</span></div>
+<div class="pill"><span id="score2">Team B: 0</span></div>
+<div class="pill streak">Streak: <span id="streak">0</span></div>
+<button class="toggle" onclick="toggleNight()">🌙/☀️</button>
+</div>
+
+<div class="track" id="track">
+<div class="lane" id="lane1"></div>
+<div class="lane" id="lane2"></div>
+<div class="stripes"></div>
+
+<div id="car1" class="car">
+  <div class="car-body"></div>
+  <div class="car-top"></div>
+  <div class="wheel w1"></div>
+  <div class="wheel w2"></div>
+  <div class="flame"></div>
+</div>
+
+<div id="car2" class="car">
+  <div class="car-body"></div>
+  <div class="car-top"></div>
+  <div class="wheel w1"></div>
+  <div class="wheel w2"></div>
+  <div class="flame"></div>
+</div>
+
+<div class="finish"></div>
+</div>
+
+<div id="questionBox">
+<h2 id="questionText">Enter names and Start</h2>
+<div id="equation" style="font-size:34px;margin:15px 0;font-weight:bold"></div>
+<div class="answers" id="answers"></div>
+</div>
+
+<div class="controls">
+<input id="name1" placeholder="Team A name">
+<input id="name2" placeholder="Team B name">
+<select id="table">
+<option value="all">All Tables</option>
+<option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option>
+</select>
+<select id="difficulty">
+<option value="easy">Easy</option>
+<option value="medium">Medium</option>
+<option value="hard">Hard</option>
+</select>
+<button class="answerBtn" onclick="startGame()">Start Race</button>
+</div>
+
+<div id="leaderboard"><h3>🏆 Leaderboard</h3><div id="leaders"></div></div>
+
+<audio id="engine" src="https://actions.google.com/sounds/v1/transportation/car_engine_loop.ogg" loop></audio>
+<audio id="boostSound" src="https://actions.google.com/sounds/v1/cartoon/slide_whistle_to_drum_hit.ogg"></audio>
+
+<script>
+const finishLeft=120;let teams=['Team A','Team B'];let scores=[0,0];let pos=[0,0];let turn=0,qn=0,timer=30,tHandle=null,streak=0,correctAnswer=0;const engine=document.getElementById('engine');const boost=document.getElementById('boostSound');
+function toggleNight(){document.body.classList.toggle('night')}
+function trackWidth(){return document.getElementById('track').clientWidth}
+function setStartPositions(){const start=trackWidth()-170;pos=[start,start];document.getElementById('car1').style.left=start+'px';document.getElementById('car2').style.left=start+'px'}
+function rand(min,max){return Math.floor(Math.random()*(max-min+1))+min}
+function pickNumbers(){let table=document.getElementById('table').value;let a=table==='all'?rand(2,12):Number(table);let diff=document.getElementById('difficulty').value;let b=diff==='easy'?rand(1,6):diff==='medium'?rand(1,10):rand(1,12);let mode=diff==='hard'&&Math.random()<0.3?'division':'multiply';return{a,b,mode}}
+function makeQuestion(){if(qn>=15){endGame();return}qn++;document.getElementById('turn').textContent=teams[turn];timer=30;updateTimer();startTimer();let{a,b,mode}=pickNumbers();if(mode==='multiply'){correctAnswer=a*b;document.getElementById('equation').textContent=`${a} × ${b} = ?`}else{correctAnswer=a*b;document.getElementById('equation').textContent=`${correctAnswer} ÷ ${a} = ?`;correctAnswer=b}makeAnswers()}
+function makeAnswers(){const box=document.getElementById('answers');box.innerHTML='';let opts=[correctAnswer];while(opts.length<4){let f=rand(1,144);if(!opts.includes(f))opts.push(f)}opts.sort(()=>Math.random()-0.5);opts.forEach(v=>{let b=document.createElement('button');b.className='answerBtn';b.textContent=v;b.onclick=()=>answer(v);box.appendChild(b)})}
+function spinWheels(on,car){car.querySelectorAll('.wheel').forEach(w=>w.classList.toggle('spin',on))}
+function boostFlame(on,car){car.classList.toggle('boost',on)}
+function moveCar(i,d){pos[i]-=d;let car=document.getElementById(i?'car2':'car1');spinWheels(true,car);car.classList.add('skid');car.style.left=pos[i]+'px';setTimeout(()=>{car.classList.remove('skid');spinWheels(false,car);boostFlame(false,car)},450);if(pos[i]<=finishLeft)win(i)}
+function answer(v){stopTimer();if(v===correctAnswer){scores[turn]++;streak++;let dist=100+streak*12;let car=document.getElementById(turn?'car2':'car1');if(streak>=3){boost.currentTime=0;boost.play();boostFlame(true,car);dist+=40}moveCar(turn,dist)}else{streak=0;moveCar(1-turn,70)}document.getElementById('streak').textContent=streak;updateScores();turn=1-turn;setTimeout(makeQuestion,700)}
+function updateScores(){document.getElementById('score1').textContent=`${teams[0]}: ${scores[0]}`;document.getElementById('score2').textContent=`${teams[1]}: ${scores[1]}`}
+function startTimer(){tHandle=setInterval(()=>{timer--;updateTimer();if(timer<=0){stopTimer();streak=0;moveCar(1-turn,80);turn=1-turn;setTimeout(makeQuestion,600)}},1000)}
+function stopTimer(){clearInterval(tHandle)}
+function updateTimer(){document.getElementById('timer').textContent=timer}
+function win(i){stopTimer();engine.pause();document.getElementById('questionText').innerHTML=`🏆 ${teams[i]} Wins!`;saveLeader(teams[i]);document.getElementById('answers').innerHTML='';showLeaders()}
+function endGame(){let w=scores[0]>scores[1]?0:1;engine.pause();document.getElementById('questionText').innerHTML=`🏁 Final Winner: ${teams[w]}`;saveLeader(teams[w]);showLeaders()}
+function saveLeader(name){let data=JSON.parse(localStorage.getItem('tableLeaders')||'[]');data.push(name);localStorage.setItem('tableLeaders',JSON.stringify(data))}
+function showLeaders(){let data=JSON.parse(localStorage.getItem('tableLeaders')||'[]');let count={};data.forEach(n=>count[n]=(count[n]||0)+1);let sorted=Object.entries(count).sort((a,b)=>b[1]-a[1]);let html='';sorted.slice(0,5).forEach(e=>html+=`${e[0]} - ${e[1]} wins<br>`);document.getElementById('leaders').innerHTML=html}
+function startGame(){teams[0]=document.getElementById('name1').value||'Team A';teams[1]=document.getElementById('name2').value||'Team B';scores=[0,0];turn=0;qn=0;streak=0;document.getElementById('streak').textContent=0;updateScores();setStartPositions();engine.currentTime=0;engine.play();makeQuestion()}
+window.addEventListener('resize',setStartPositions);showLeaders();
+</script>
+</body>
+</html>
